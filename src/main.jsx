@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import MovieClubDashboard from './MovieClubDashboard';
+import ImdbStyleDashboard from './components/ImdbStyleDashboard';
 
 import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <MovieClubDashboard />
+    <ImdbStyleDashboard />
   </React.StrictMode>
 );
