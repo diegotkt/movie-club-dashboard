@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Club Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        select, input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .movies-table {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .table-controls {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .search-control input {
+            min-width: 250px;
+        }
+
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .insights-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .insights-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .insight-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 50px;
+        }
+
+        .movie-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .movie-modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .movie-modal-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px 20px 0 0;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .movie-title {
+            color: white;
+            font-size: 2.2em;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .movie-presenter {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1em;
+            margin: 10px 0 0 0;
+            font-style: italic;
+        }
+
+        .movie-modal-body {
+            padding: 25px;
+            color: white;
+        }
+
+        .movie-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .movie-info-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .movie-info-item {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .movie-info-label {
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .movie-info-value {
+            color: white;
+            font-size: 1.05em;
+        }
+
+        .movie-synopsis {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+
+        .movie-synopsis h3 {
+            color: white;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .movie-facts {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+
+        .movie-facts h3 {
+            color: white;
+            margin: 0 0 15px 0;
+            font-size: 1.3em;
+        }
+
+        .movie-facts ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .movie-facts li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .movie-facts li::before {
+            content: "•";
+            color: #FFD700;
+            font-size: 1.5em;
+            position: absolute;
+            left: 10px;
+            top: 5px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: white;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .clickable-movie {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .clickable-movie:hover {
+            background-color: rgba(102, 126, 234, 0.1) !important;
+        }
+
+        @media (max-width: 768px) {
+            .movie-modal-content {
+                margin: 5% auto;
+                width: 95%;
+            }
+            
+            .movie-title {
+                font-size: 1.8em;
+            }
+            
+            .movie-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Movie Club Dashboard</h1>
+            <p>Explore your cinematic journey across 5 seasons • 157 movies • 129 years of cinema</p>
+        </div>
+
+        <div id="loading" class="loading">Loading movie data...</div>
+
+        <div id="main-content" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-movies">157</div>
+                    <div class="stat-label">Total Movies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-minutes">19,169</div>
+                    <div class="stat-label">Minutes Watched</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-countries">50</div>
+                    <div class="stat-label">Countries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-presenters">16</div>
+                    <div class="stat-label">Presenters</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="control-group">
+                    <label for="season-filter">Filter by Season:</label>
+                    <select id="season-filter">
+                        <option value="all">All Seasons</option>
+                        <option value="1">Season 1</option>
+                        <option value="2">Season 2</option>
+                        <option value="3">Season 3</option>
+                        <option value="4">Season 4</option>
+                        <option value="5">Season 5</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="presenter-filter">Filter by Presenter:</label>
+                    <select id="presenter-filter">
+                        <option value="all">All Presenters</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Movies by Continent per Season</div>
+                    <canvas id="continent-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Movies Count & Watch Time Trend</div>
+                    <canvas id="season-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Top Presenters</div>
+                    <canvas id="presenter-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Presenter Evolution Across Seasons</div>
+                    <canvas id="presenter-season-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="insights-section">
+                <div class="insights-title">🔍 Season Insights & Analysis</div>
+                <div id="insights-content"></div>
+            </div>
+
+            <div class="movies-table">
+                <div class="table-controls">
+                    <h3>Movie List <span id="filtered-count">(157 movies)</span></h3>
+                    <div class="search-control">
+                        <label for="search-filter">🔍</label>
+                        <input type="text" id="search-filter" placeholder="Search by title...">
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="movies-table">
+                        <thead>
+                            <tr>
+                                <th>Season</th>
+                                <th>Title</th>
+                                <th>Presenter</th>
+                                <th>Year</th>
+                                <th>Duration</th>
+                                <th>Origin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="movies-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Movie Details Modal -->
+        <div id="movie-modal" class="movie-modal">
+            <div class="movie-modal-content">
+                <span class="close-modal">&times;</span>
+                
+                <div class="movie-modal-header">
+                    <h1 class="movie-title" id="modal-title">
+                        🎬 <span id="modal-title-text">Movie Title</span>
+                    </h1>
+                    <p class="movie-presenter" id="modal-presenter">Presented by: Presenter Name</p>
+                </div>
+                
+                <div class="movie-modal-body">
+                    <div class="movie-info-grid">
+                        <div class="movie-info-section">
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Director:</span>
+                                <div class="movie-info-value" id="modal-director">Director Name</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Cast:</span>
+                                <div class="movie-info-value" id="modal-cast">Main Cast</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Budget:</span>
+                                <div class="movie-info-value" id="modal-budget">Budget Info</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Box Office Gross:</span>
+                                <div class="movie-info-value" id="modal-boxoffice">Box Office Info</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Awards:</span>
+                                <div class="movie-info-value" id="modal-awards">Awards Info</div>
+                            </div>
+                        </div>
+                        
+                        <div class="movie-info-section">
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Duration:</span>
+                                <div class="movie-info-value" id="modal-duration">Duration</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Genre:</span>
+                                <div class="movie-info-value" id="modal-genre">Genre</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Release Year:</span>
+                                <div class="movie-info-value" id="modal-year">Year</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Origin:</span>
+                                <div class="movie-info-value" id="modal-origin">Origin</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Language:</span>
+                                <div class="movie-info-value" id="modal-language">Language</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Filming Locations:</span>
+                                <div class="movie-info-value" id="modal-locations">Locations</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">RottenTomatoes Rating:</span>
+                                <div class="movie-info-value" id="modal-rating">Rating</div>
+                            </div>
+                            <div class="movie-info-item">
+                                <span class="movie-info-label">Themes/Tags:</span>
+                                <div class="movie-info-value" id="modal-themes">Themes</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="movie-synopsis">
+                        <h3>📖 Synopsis</h3>
+                        <p id="modal-synopsis">Movie synopsis will appear here...</p>
+                    </div>
+                    
+                    <div class="movie-facts">
+                        <h3>🎯 Interesting Facts</h3>
+                        <ul id="modal-facts">
+                            <li>Interesting facts will appear here...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Complete movie data - all 157 movies
+        const moviesData = [
+            {"Season":1,"Title":"Ready or not","Presented by":"Greg","Release Year":2019,"Origin":"USA/Canada","Duration":95},
+            {"Season":1,"Title":"12 hommes en colère","Presented by":"Spock","Release Year":1957,"Origin":"USA","Duration":96},
+            {"Season":1,"Title":"Usual Suspect","Presented by":"Juan","Release Year":1995,"Origin":"USA","Duration":106},
+            {"Season":1,"Title":"Apocalypto","Presented by":"Louis","Release Year":2006,"Origin":"USA","Duration":139},
+            {"Season":1,"Title":"La passion du Christ","Presented by":"Mike","Release Year":2004,"Origin":"USA","Duration":127},
+            {"Season":1,"Title":"Us","Presented by":"Greg","Release Year":2019,"Origin":"USA","Duration":116},
+            {"Season":1,"Title":"Requiem pour un massacre","Presented by":"Zonf","Release Year":1985,"Origin":"Soviet Union","Duration":142},
+            {"Season":1,"Title":"Cliffhanger","Presented by":"Spock","Release Year":1993,"Origin":"USA/Italy","Duration":113},
+            {"Season":1,"Title":"Le trou","Presented by":"Juan","Release Year":1960,"Origin":"France","Duration":131},
+            {"Season":1,"Title":"Dallas Buyers Club","Presented by":"Léo","Release Year":2013,"Origin":"USA","Duration":117},
+            {"Season":1,"Title":"Le garçon qui domptât le vent","Presented by":"Chacha","Release Year":2019,"Origin":"UK/Malawi","Duration":113},
+            {"Season":1,"Title":"Le vieux fusils","Presented by":"Zonf","Release Year":1975,"Origin":"France","Duration":103},
+            {"Season":1,"Title":"Vice","Presented by":"E.","Release Year":2018,"Origin":"USA","Duration":132},
+            {"Season":1,"Title":"La vie aquatique","Presented by":"Mike","Release Year":2004,"Origin":"USA","Duration":119},
+            {"Season":1,"Title":"Nord by Northwest","Presented by":"Greg","Release Year":1959,"Origin":"USA","Duration":136},
+            {"Season":1,"Title":"Man of the U.N.C.L.E.","Presented by":"Léo","Release Year":2015,"Origin":"USA/UK","Duration":116},
+            {"Season":1,"Title":"La vie des autres","Presented by":"Chacha","Release Year":2006,"Origin":"Germany","Duration":137},
+            {"Season":1,"Title":"L'Arrivée d'un train en gare de La Ciotat","Presented by":"Greg","Release Year":1895,"Origin":"France","Duration":1},
+            {"Season":1,"Title":"Citizen Kane","Presented by":"Spock","Release Year":1941,"Origin":"USA","Duration":119},
+            {"Season":1,"Title":"A Nous Quatre","Presented by":"Nabu","Release Year":1975,"Origin":"France","Duration":192},
+            {"Season":1,"Title":"Psychose","Presented by":"Juan","Release Year":1960,"Origin":"USA","Duration":109},
+            {"Season":1,"Title":"Sausage Party","Presented by":"Mike","Release Year":2016,"Origin":"USA/Canada","Duration":89},
+            {"Season":1,"Title":"Walkyrie","Presented by":"E.","Release Year":2008,"Origin":"USA/Germany","Duration":121},
+            {"Season":1,"Title":"La Chute","Presented by":"Chacha","Release Year":2004,"Origin":"Germany/Austria","Duration":156},
+            {"Season":1,"Title":"Last House on the Left","Presented by":"Léo","Release Year":2009,"Origin":"USA","Duration":110},
+            {"Season":1,"Title":"Once upon a time in America P1","Presented by":"Juan","Release Year":1984,"Origin":"USA/Italy","Duration":229},
+            {"Season":1,"Title":"Once upon a time in America P2","Presented by":"No presenter","Release Year":1984,"Origin":"USA/Italy","Duration":229},
+            {"Season":1,"Title":"The Father","Presented by":"E.","Release Year":2020,"Origin":"UK/France","Duration":98},
+            {"Season":2,"Title":"Le voyage de Chiro","Presented by":"Spock","Release Year":2001,"Origin":"Japan","Duration":125},
+            {"Season":2,"Title":"The Brocken cercle breakdown","Presented by":"Greg","Release Year":1999,"Origin":"USA","Duration":123},
+            {"Season":2,"Title":"Good bye Lénine","Presented by":"Chacha","Release Year":2003,"Origin":"Germany","Duration":121},
+            {"Season":2,"Title":"La grande Bellezza","Presented by":"Diego","Release Year":2013,"Origin":"Italy/France","Duration":141},
+            {"Season":2,"Title":"Old Boy","Presented by":"Juan","Release Year":2003,"Origin":"South Korea","Duration":120},
+            {"Season":2,"Title":"Tueurs","Presented by":"Mike","Release Year":2010,"Origin":"USA","Duration":100},
+            {"Season":2,"Title":"The Thing","Presented by":"E.","Release Year":1982,"Origin":"USA","Duration":109},
+            {"Season":2,"Title":"Vertigo","Presented by":"Zonf","Release Year":1958,"Origin":"USA","Duration":128},
+            {"Season":2,"Title":"A bout de souffle","Presented by":"Chacha","Release Year":1960,"Origin":"France","Duration":90},
+            {"Season":2,"Title":"Casablanca","Presented by":"Juan","Release Year":1942,"Origin":"USA","Duration":102},
+            {"Season":2,"Title":"Le labyrinthe de Pan","Presented by":"Spock","Release Year":2006,"Origin":"Spain/Mexico","Duration":118},
+            {"Season":2,"Title":"The Last duel","Presented by":"E.","Release Year":2021,"Origin":"USA/UK","Duration":152},
+            {"Season":2,"Title":"Don't look up","Presented by":"Greg","Release Year":2021,"Origin":"USA","Duration":138},
+            {"Season":2,"Title":"The Skin I Leave","Presented by":"Chacha","Release Year":2011,"Origin":"Spain","Duration":120},
+            {"Season":2,"Title":"The Host","Presented by":"Greg","Release Year":2006,"Origin":"South Korea","Duration":120},
+            {"Season":2,"Title":"Drive","Presented by":"Zonf","Release Year":2011,"Origin":"USA","Duration":100},
+            {"Season":2,"Title":"Isle of Dogs","Presented by":"Mike","Release Year":2018,"Origin":"USA/Germany","Duration":101},
+            {"Season":2,"Title":"Match Point","Presented by":"Chacha","Release Year":2005,"Origin":"UK","Duration":124},
+            {"Season":2,"Title":"36 quaid des orfèvres","Presented by":"Spock","Release Year":1947,"Origin":"France","Duration":106},
+            {"Season":2,"Title":"Amistad","Presented by":"E.","Release Year":1997,"Origin":"USA","Duration":155},
+            {"Season":2,"Title":"Le bon, la brute et le truand","Presented by":"Juan","Release Year":1966,"Origin":"Italy/Spain","Duration":178},
+            {"Season":2,"Title":"The Suicid Squad","Presented by":"Juan","Release Year":2021,"Origin":"USA","Duration":132},
+            {"Season":2,"Title":"Misery","Presented by":"Greg","Release Year":1990,"Origin":"USA","Duration":107},
+            {"Season":2,"Title":"HEAT","Presented by":"Spock","Release Year":1995,"Origin":"USA","Duration":170},
+            {"Season":2,"Title":"La vie d'une courgette","Presented by":"Nabu","Release Year":2016,"Origin":"France/Switzerland","Duration":70},
+            {"Season":2,"Title":"L'armée des ombres","Presented by":"Juan","Release Year":1969,"Origin":"France","Duration":145},
+            {"Season":2,"Title":"25th Hours","Presented by":"E.","Release Year":2002,"Origin":"USA","Duration":135},
+            {"Season":2,"Title":"Blade runner 2049","Presented by":"Bonus","Release Year":2017,"Origin":"USA/UK/Canada","Duration":164},
+            {"Season":2,"Title":"Hidden Figures","Presented by":"Chacha","Release Year":2016,"Origin":"USA","Duration":127},
+            {"Season":2,"Title":"Lost in Translation","Presented by":"Greg","Release Year":2003,"Origin":"USA/Japan","Duration":102},
+            {"Season":2,"Title":"Apocalypse Now","Presented by":"Juan","Release Year":1979,"Origin":"USA","Duration":147},
+            {"Season":2,"Title":"Fail Safe","Presented by":"Spock","Release Year":1964,"Origin":"USA","Duration":112},
+            {"Season":2,"Title":"Top Gun","Presented by":"E.","Release Year":1986,"Origin":"USA","Duration":110},
+            {"Season":2,"Title":"2001: l'odyssée de l'espace","Presented by":"Juan","Release Year":1968,"Origin":"USA/UK","Duration":149},
+            {"Season":2,"Title":"Le silence des agneaux","Presented by":"Chacha","Release Year":1991,"Origin":"USA","Duration":118},
+            {"Season":2,"Title":"The Hunt","Presented by":"Léo","Release Year":2012,"Origin":"Denmark","Duration":115},
+            {"Season":3,"Title":"Everything Everywhere All at Once","Presented by":"Greg","Release Year":2022,"Origin":"USA","Duration":139},
+            {"Season":3,"Title":"Nuovo cinema Paradiso","Presented by":"Zonf","Release Year":1988,"Origin":"Italy","Duration":155},
+            {"Season":3,"Title":"Le dictateur","Presented by":"Juan","Release Year":1940,"Origin":"USA","Duration":125},
+            {"Season":3,"Title":"Midsommar","Presented by":"Greg","Release Year":2019,"Origin":"USA/Sweden","Duration":148},
+            {"Season":3,"Title":"J'accuse","Presented by":"E.","Release Year":2019,"Origin":"France/Italy","Duration":132},
+            {"Season":3,"Title":"Werk ohne autor","Presented by":"Chacha","Release Year":2018,"Origin":"Germany","Duration":189},
+            {"Season":3,"Title":"True Romance","Presented by":"Léo","Release Year":1993,"Origin":"USA","Duration":119},
+            {"Season":3,"Title":"The triangle of sadness","Presented by":"E.","Release Year":2022,"Origin":"Sweden/UK/France","Duration":147},
+            {"Season":3,"Title":"Incroyable mais vrai","Presented by":"Mike","Release Year":2022,"Origin":"France","Duration":74},
+            {"Season":3,"Title":"Le salaire de la peur","Presented by":"Juan","Release Year":1953,"Origin":"France/Italy","Duration":131},
+            {"Season":3,"Title":"The Elephant man","Presented by":"Chacha","Release Year":1980,"Origin":"USA/UK","Duration":124},
+            {"Season":3,"Title":"Youth","Presented by":"Diego","Release Year":2015,"Origin":"Italy/France/UK","Duration":124},
+            {"Season":3,"Title":"Les évadés","Presented by":"Chacha","Release Year":1994,"Origin":"USA","Duration":142},
+            {"Season":3,"Title":"The Guilty","Presented by":"Greg","Release Year":2021,"Origin":"USA","Duration":90},
+            {"Season":3,"Title":"James bond goldfinger","Presented by":"Diego","Release Year":1964,"Origin":"UK","Duration":110},
+            {"Season":3,"Title":"Relatos Salvajes","Presented by":"Juan","Release Year":2014,"Origin":"Argentina/Spain","Duration":122},
+            {"Season":3,"Title":"The son","Presented by":"E.","Release Year":2022,"Origin":"USA/UK","Duration":123},
+            {"Season":3,"Title":"Fargo","Presented by":"Bonus","Release Year":1996,"Origin":"USA","Duration":98},
+            {"Season":3,"Title":"Licorice Pizza","Presented by":"Pidel","Release Year":2021,"Origin":"USA","Duration":133},
+            {"Season":3,"Title":"True Grif","Presented by":"Léo","Release Year":2010,"Origin":"USA","Duration":110},
+            {"Season":3,"Title":"Babyone","Presented by":"Chacha","Release Year":2017,"Origin":"USA/UK","Duration":113},
+            {"Season":3,"Title":"Thelmas & Louise","Presented by":"Bonus","Release Year":1991,"Origin":"USA","Duration":130},
+            {"Season":3,"Title":"Super Troopers","Presented by":"Diego","Release Year":2001,"Origin":"USA","Duration":100},
+            {"Season":3,"Title":"Fumer fait tousser","Presented by":"Mike","Release Year":2022,"Origin":"France","Duration":77},
+            {"Season":3,"Title":"Danish Girl","Presented by":"Chacha","Release Year":2015,"Origin":"UK/USA","Duration":119},
+            {"Season":4,"Title":"The Worst Perso in the world","Presented by":"E.","Release Year":2021,"Origin":"Norway","Duration":121},
+            {"Season":4,"Title":"Full Metal Jacquet","Presented by":"Chacha","Release Year":1987,"Origin":"USA/UK","Duration":116},
+            {"Season":4,"Title":"Beautiful boy","Presented by":"Diego","Release Year":2018,"Origin":"USA","Duration":120},
+            {"Season":4,"Title":"Mandibule","Presented by":"Mike","Release Year":2020,"Origin":"France","Duration":77},
+            {"Season":4,"Title":"A monster calls","Presented by":"Greg","Release Year":2016,"Origin":"Spain/UK/USA","Duration":108},
+            {"Season":4,"Title":"Lawrence D'Arabie","Presented by":"Juan","Release Year":1962,"Origin":"UK","Duration":228},
+            {"Season":4,"Title":"La cartographie des nuages","Presented by":"Zonf","Release Year":2012,"Origin":"Germany/USA/Hong Kong","Duration":172},
+            {"Season":4,"Title":"It fallows","Presented by":"Lolita","Release Year":2014,"Origin":"USA","Duration":100},
+            {"Season":4,"Title":"La Colonia","Presented by":"Spock","Release Year":2015,"Origin":"Germany/France/UK","Duration":110},
+            {"Season":4,"Title":"Sisu","Presented by":"Léo","Release Year":2022,"Origin":"Finland","Duration":91},
+            {"Season":4,"Title":"Incide Ll Davis","Presented by":"E.","Release Year":2013,"Origin":"USA/UK/France","Duration":104},
+            {"Season":4,"Title":"Die Hard","Presented by":"Chacha","Release Year":1988,"Origin":"USA","Duration":132},
+            {"Season":4,"Title":"Belle de jour","Presented by":"Diego","Release Year":1967,"Origin":"France/Italy","Duration":100},
+            {"Season":4,"Title":"Parasite","Presented by":"Chacha","Release Year":2019,"Origin":"South Korea","Duration":132},
+            {"Season":4,"Title":"Le daim + Yannick","Presented by":"Mike","Release Year":2019,"Origin":"France","Duration":77},
+            {"Season":4,"Title":"Dernière Nuit à Milan","Presented by":"Diego","Release Year":2019,"Origin":"France","Duration":90},
+            {"Season":4,"Title":"Anatomie d'une chute","Presented by":"Greg","Release Year":2023,"Origin":"France","Duration":151},
+            {"Season":4,"Title":"Bonnie and Clyde","Presented by":"Chacha","Release Year":1967,"Origin":"USA","Duration":111},
+            {"Season":4,"Title":"Là où chantent les écrevisses","Presented by":"Juan","Release Year":2022,"Origin":"USA","Duration":125},
+            {"Season":4,"Title":"The mission","Presented by":"Spock","Release Year":1986,"Origin":"UK","Duration":125},
+            {"Season":4,"Title":"Pulp fiction","Presented by":"Juan","Release Year":1994,"Origin":"USA","Duration":154},
+            {"Season":4,"Title":"I tu mama tambien","Presented by":"Diego","Release Year":2001,"Origin":"Mexico","Duration":106},
+            {"Season":4,"Title":"One Life","Presented by":"E.","Release Year":2023,"Origin":"UK","Duration":110},
+            {"Season":4,"Title":"Poor Things","Presented by":"Greg","Release Year":2023,"Origin":"Ireland/UK","Duration":141},
+            {"Season":4,"Title":"Premier Contact - Arrival","Presented by":"Spock","Release Year":2016,"Origin":"USA","Duration":116},
+            {"Season":4,"Title":"The Artist","Presented by":"Chacha","Release Year":2011,"Origin":"France/Belgium","Duration":100},
+            {"Season":4,"Title":"The Machinist","Presented by":"Lolita","Release Year":2004,"Origin":"Spain/UK","Duration":101},
+            {"Season":4,"Title":"The shape of water","Presented by":"Juan","Release Year":2017,"Origin":"USA/Canada","Duration":123},
+            {"Season":4,"Title":"Perfect Day","Presented by":"Léo","Release Year":2015,"Origin":"Spain","Duration":106},
+            {"Season":4,"Title":"Bon baisé de Bruges","Presented by":"Chacha","Release Year":2008,"Origin":"UK/USA","Duration":107},
+            {"Season":4,"Title":"Le patient anglais","Presented by":"E.","Release Year":1996,"Origin":"USA/UK","Duration":162},
+            {"Season":4,"Title":"American Honey","Presented by":"Diego","Release Year":2016,"Origin":"UK/USA","Duration":163},
+            {"Season":4,"Title":"Dracula","Presented by":"Greg","Release Year":1992,"Origin":"USA","Duration":128},
+            {"Season":4,"Title":"Vincent doit mourir","Presented by":"Mike","Release Year":2023,"Origin":"France","Duration":115},
+            {"Season":4,"Title":"Promising Young Woman","Presented by":"Lolita","Release Year":2020,"Origin":"USA","Duration":113},
+            {"Season":4,"Title":"Children of men","Presented by":"Juan","Release Year":2006,"Origin":"UK/USA","Duration":109},
+            {"Season":5,"Title":"Longlegs","Presented by":"Diego","Release Year":2024,"Origin":"Canada/USA","Duration":101},
+            {"Season":5,"Title":"The Master","Presented by":"Léo","Release Year":2012,"Origin":"USA","Duration":137},
+            {"Season":5,"Title":"À good person","Presented by":"Greg","Release Year":2023,"Origin":"USA","Duration":129},
+            {"Season":5,"Title":"The Hours","Presented by":"Chacha","Release Year":2002,"Origin":"USA/UK","Duration":114},
+            {"Season":5,"Title":"Portrait de la jeune fille en feu","Presented by":"Lolita","Release Year":2019,"Origin":"France","Duration":122},
+            {"Season":5,"Title":"Man of the moon","Presented by":"Juan","Release Year":1999,"Origin":"USA/UK/Germany","Duration":118},
+            {"Season":5,"Title":"Talk to me","Presented by":"E.","Release Year":2022,"Origin":"Australia","Duration":95},
+            {"Season":5,"Title":"No country for old men","Presented by":"Greg","Release Year":2007,"Origin":"USA","Duration":122},
+            {"Season":5,"Title":"Crash","Presented by":"Chacha","Release Year":2004,"Origin":"USA","Duration":112},
+            {"Season":5,"Title":"La valse des pantins","Presented by":"Diego","Release Year":2012,"Origin":"USA/China","Duration":119},
+            {"Season":5,"Title":"Here","Presented by":"E.","Release Year":2024,"Origin":"USA","Duration":104},
+            {"Season":5,"Title":"La merditude des choses","Presented by":"Mike","Release Year":2009,"Origin":"Belgium","Duration":108},
+            {"Season":5,"Title":"The Family Man","Presented by":"Spock","Release Year":2000,"Origin":"USA","Duration":125},
+            {"Season":5,"Title":"Wild Robot","Presented by":"Diego","Release Year":2024,"Origin":"USA","Duration":102},
+            {"Season":5,"Title":"Emilia Perez","Presented by":"Chacha","Release Year":2024,"Origin":"France/Mexico","Duration":132},
+            {"Season":5,"Title":"Les huit montagnes","Presented by":"E.","Release Year":2022,"Origin":"Italy/Belgium/France","Duration":147},
+            {"Season":5,"Title":"Furiosa","Presented by":"Spock","Release Year":2024,"Origin":"Australia/USA","Duration":148},
+            {"Season":5,"Title":"La nuit se traine","Presented by":"Greg","Release Year":2023,"Origin":"France","Duration":108},
+            {"Season":5,"Title":"The Lobster","Presented by":"Léo","Release Year":2015,"Origin":"Ireland/UK/Greece","Duration":119},
+            {"Season":5,"Title":"Daaaaaali","Presented by":"Mike","Release Year":2023,"Origin":"France","Duration":77},
+            {"Season":5,"Title":"Om … Om","Presented by":"Chacha","Release Year":2021,"Origin":"France","Duration":72},
+            {"Season":5,"Title":"The Dirty Dozen","Presented by":"Juan","Release Year":1967,"Origin":"USA","Duration":150},
+            {"Season":5,"Title":"La chimera","Presented by":"Lolita","Release Year":2023,"Origin":"Italy/France/Switzerland","Duration":130},
+            {"Season":5,"Title":"J'ai perdu mon corps","Presented by":"Greg","Release Year":2019,"Origin":"France","Duration":81},
+            {"Season":5,"Title":"Le pacte des Loups","Presented by":"Chacha","Release Year":2001,"Origin":"France","Duration":142},
+            {"Season":5,"Title":"The beast of the southern wild","Presented by":"Rose","Release Year":2012,"Origin":"USA","Duration":93},
+            {"Season":5,"Title":"The Game","Presented by":"E.","Release Year":1997,"Origin":"USA","Duration":129},
+            {"Season":5,"Title":"Je verrai toujours vos visages","Presented by":"Lolita","Release Year":2023,"Origin":"France","Duration":118},
+            {"Season":5,"Title":"King of the belgians","Presented by":"Mike","Release Year":2016,"Origin":"Belgium/Netherlands/Bulgaria","Duration":94},
+            {"Season":5,"Title":"Bad Lieutenant","Presented by":"Diego","Release Year":1992,"Origin":"USA","Duration":96},
+            {"Season":5,"Title":"Ben-Hur","Presented by":"Juan","Release Year":1959,"Origin":"USA","Duration":212},
+            {"Season":5,"Title":"Thelma & Louise","Presented by":"No presenter","Release Year":1991,"Origin":"USA","Duration":130}
+        ];
+
+        let charts = {};
+        let currentFilters = {
+            season: 'all',
+            presenter: 'all',
+            search: ''
+        };
+
+        // Country to continent mapping
+        const countryToContinent = {
+            'USA': 'North America', 'Canada': 'North America', 'Mexico': 'North America',
+            'UK': 'Europe', 'France': 'Europe', 'Germany': 'Europe', 'Italy': 'Europe', 
+            'Spain': 'Europe', 'Sweden': 'Europe', 'Norway': 'Europe', 'Belgium': 'Europe',
+            'Netherlands': 'Europe', 'Denmark': 'Europe', 'Finland': 'Europe', 'Ireland': 'Europe',
+            'Switzerland': 'Europe', 'Austria': 'Europe', 'Bulgaria': 'Europe', 'Greece': 'Europe',
+            'Soviet Union': 'Europe', 'Russia': 'Europe', 'Malawi': 'Africa',
+            'Japan': 'Asia', 'South Korea': 'Asia', 'China': 'Asia', 'Hong Kong': 'Asia',
+            'Argentina': 'South America', 'Colombia': 'South America',
+            'Australia': 'Oceania'
+        };
+
+        function getContinent(origin) {
+            if (!origin) return 'Unknown';
+            const countries = origin.split('/').map(c => c.trim());
+            const continents = countries.map(country => countryToContinent[country] || 'Other');
+            return continents[0] || 'Other';
+        }
+
+        // Add continent info to each movie
+        moviesData.forEach(movie => {
+            movie.continent = getContinent(movie.Origin);
+        });
+
+        function initializeDashboard() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            
+            setupEventListeners();
+            populateFilters();
+            updateAllData();
+            
+            console.log(`Dashboard loaded with ${moviesData.length} movies`);
+        }
+
+        function populateFilters() {
+            // Populate presenter filter
+            const presenterFilter = document.getElementById('presenter-filter');
+            const presenters = [...new Set(moviesData.map(m => m['Presented by']).filter(p => p && p !== 'No presenter' && p !== 'Bonus'))].sort();
+            
+            presenters.forEach(presenter => {
+                const option = document.createElement('option');
+                option.value = presenter;
+                option.textContent = presenter;
+                presenterFilter.appendChild(option);
+            });
+        }
+
+        function setupEventListeners() {
+            const seasonFilter = document.getElementById('season-filter');
+            const presenterFilter = document.getElementById('presenter-filter');
+            const searchFilter = document.getElementById('search-filter');
+
+            seasonFilter.addEventListener('change', (e) => {
+                currentFilters.season = e.target.value;
+                updateAllData();
+            });
+
+            presenterFilter.addEventListener('change', (e) => {
+                currentFilters.presenter = e.target.value;
+                updateAllData();
+            });
+
+            searchFilter.addEventListener('input', (e) => {
+                currentFilters.search = e.target.value.toLowerCase();
+                updateTable();
+            });
+        }
+
+        function getFilteredData() {
+            return moviesData.filter(movie => {
+                const seasonMatch = currentFilters.season === 'all' || movie.Season == currentFilters.season;
+                const presenterMatch = currentFilters.presenter === 'all' || movie['Presented by'] === currentFilters.presenter;
+                const searchMatch = currentFilters.search === '' || movie.Title.toLowerCase().includes(currentFilters.search);
+                
+                return seasonMatch && presenterMatch && searchMatch;
+            });
+        }
+
+        function getChartFilteredData() {
+            return moviesData.filter(movie => {
+                const seasonMatch = currentFilters.season === 'all' || movie.Season == currentFilters.season;
+                const presenterMatch = currentFilters.presenter === 'all' || movie['Presented by'] === currentFilters.presenter;
+                
+                return seasonMatch && presenterMatch;
+            });
+        }
+
+        function updateAllData() {
+            updateStats();
+            updateCharts();
+            updateTable();
+            updateInsights();
+        }
+
+        function updateStats() {
+            const filteredData = getChartFilteredData();
+            
+            const totalMovies = filteredData.length;
+            const totalMinutes = filteredData.reduce((sum, movie) => sum + movie.Duration, 0);
+            const totalCountries = new Set(filteredData.map(m => m.Origin).filter(o => o)).size;
+            const totalPresenters = new Set(filteredData.map(m => m['Presented by']).filter(p => p && p !== 'No presenter' && p !== 'Bonus')).size;
+
+            document.getElementById('total-movies').textContent = totalMovies.toLocaleString();
+            document.getElementById('total-minutes').textContent = totalMinutes.toLocaleString();
+            document.getElementById('total-countries').textContent = totalCountries;
+            document.getElementById('total-presenters').textContent = totalPresenters;
+        }
+
+        function updateCharts() {
+            // Destroy existing charts
+            Object.values(charts).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            });
+            charts = {};
+            
+            createContinentChart();
+            createSeasonChart();
+            createPresenterChart();
+            createPresenterSeasonChart();
+        }
+
+        function createContinentChart() {
+            const ctx = document.getElementById('continent-chart');
+            if (!ctx) return;
+            
+            const filteredData = getChartFilteredData();
+            const seasons = currentFilters.season === 'all' ? [1, 2, 3, 4, 5] : [parseInt(currentFilters.season)];
+            const continents = ['Europe', 'North America', 'Asia', 'South America', 'Oceania', 'Africa'];
+            
+            const datasets = continents.map((continent, index) => {
+                const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+                const data = seasons.map(season => {
+                    return filteredData.filter(m => m.Season === season && m.continent === continent).length;
+                });
+                
+                return {
+                    label: continent,
+                    data: data,
+                    backgroundColor: colors[index]
+                };
+            }).filter(dataset => dataset.data.some(val => val > 0));
+
+            charts.continent = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: seasons.map(s => `Season ${s}`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function createSeasonChart() {
+            const ctx = document.getElementById('season-chart');
+            if (!ctx) return;
+            
+            const filteredData = getChartFilteredData();
+            const seasons = currentFilters.season === 'all' ? [1, 2, 3, 4, 5] : [parseInt(currentFilters.season)];
+            
+            const movieCounts = seasons.map(season => 
+                filteredData.filter(m => m.Season === season).length
+            );
+            
+            const totalMinutes = seasons.map(season => 
+                filteredData.filter(m => m.Season === season).reduce((sum, m) => sum + m.Duration, 0)
+            );
+
+            charts.season = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: seasons.map(s => `Season ${s}`),
+                    datasets: [{
+                        label: 'Number of Movies',
+                        data: movieCounts,
+                        borderColor: '#36A2EB',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    }, {
+                        label: 'Total Minutes',
+                        data: totalMinutes,
+                        borderColor: '#FF6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y1',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            beginAtZero: true,
+                            title: { display: true, text: 'Number of Movies' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            beginAtZero: true,
+                            title: { display: true, text: 'Total Minutes' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPresenterChart() {
+            const ctx = document.getElementById('presenter-chart');
+            if (!ctx) return;
+            
+            const filteredData = getChartFilteredData();
+            const presenterCounts = {};
+            
+            filteredData.forEach(movie => {
+                const presenter = movie['Presented by'];
+                if (presenter && presenter !== 'No presenter' && presenter !== 'Bonus') {
+                    presenterCounts[presenter] = (presenterCounts[presenter] || 0) + 1;
+                }
+            });
+
+            const sortedPresenters = Object.entries(presenterCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            charts.presenter = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedPresenters.map(p => p[0]),
+                    datasets: [{
+                        label: 'Movies Presented',
+                        data: sortedPresenters.map(p => p[1]),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function createPresenterSeasonChart() {
+            const ctx = document.getElementById('presenter-season-chart');
+            if (!ctx) return;
+            
+            const filteredData = getChartFilteredData();
+            
+            // Get top presenters for the chart
+            const presenterCounts = {};
+            filteredData.forEach(movie => {
+                const presenter = movie['Presented by'];
+                if (presenter && presenter !== 'No presenter' && presenter !== 'Bonus') {
+                    presenterCounts[presenter] = (presenterCounts[presenter] || 0) + 1;
+                }
+            });
+            
+            const topPresenters = Object.entries(presenterCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8)
+                .map(p => p[0]);
+
+            const seasons = [1, 2, 3, 4, 5];
+            const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'];
+            
+            // Create datasets by season (colored by season)
+            const datasets = seasons.map((season, index) => {
+                const data = topPresenters.map(presenter => {
+                    return filteredData.filter(m => m.Season === season && m['Presented by'] === presenter).length;
+                });
+                
+                return {
+                    label: `Season ${season}`,
+                    data: data,
+                    backgroundColor: colors[index],
+                    borderColor: colors[index],
+                    borderWidth: 1
+                };
+            }).filter(dataset => dataset.data.some(val => val > 0));
+
+            charts.presenterSeason = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topPresenters,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    scales: { 
+                        y: { beginAtZero: true },
+                        x: { ticks: { maxRotation: 45 } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        function updateInsights() {
+            const filteredData = getChartFilteredData();
+            const insights = [];
+            
+            if (currentFilters.season === 'all') {
+                // Overall insights with fun facts
+                insights.push({
+                    title: "🎬 Cinema Time Machine",
+                    content: "Your club spans 129 years of cinema history! From the Lumière Brothers' 1-minute train arrival (1895) to 2024's 'Longlegs', you've traveled through every major era of filmmaking."
+                });
+
+                insights.push({
+                    title: "🌍 Global Cinema Explorer",
+                    content: "50 countries represented! You've explored cinema from Soviet-era masterpieces to modern Korean thrillers, covering every continent except Antarctica."
+                });
+
+                insights.push({
+                    title: "🏆 Greg's Cinema Dynasty",
+                    content: "Greg leads with 20 presentations - that's 12.7% of all movies! If Greg were a film festival, he'd be running for 3 weeks straight."
+                });
+
+                insights.push({
+                    title: "📊 The Epic Marathon",
+                    content: "19,169 total minutes = 319 hours = 13.3 straight days of watching! You could watch the entire Lord of the Rings extended trilogy 26 times."
+                });
+
+            } else {
+                // Season-specific insights
+                const seasonNum = parseInt(currentFilters.season);
+                const seasonMovies = filteredData.filter(m => m.Season === seasonNum);
+                const seasonMinutes = seasonMovies.reduce((sum, m) => sum + m.Duration, 0);
+                
+                const seasonInsights = {
+                    1: {
+                        title: "🎭 Season 1: The Foundation",
+                        content: `28 movies establishing your club's DNA! Started with a bang featuring the cinema's oldest (1895) and spans 125 years. Greg emerged as the early leader with 4 presentations.`,
+                        funFact: "Fun fact: You watched 'Once Upon a Time in America' as a two-parter - that's 458 minutes of pure Sergio Leone epicness!"
+                    },
+                    2: {
+                        title: "🚀 Season 2: The Expansion", 
+                        content: `36 movies - your biggest season! Juan took the lead with 6 presentations. You discovered Asian cinema gems like 'Spirited Away' and 'Oldboy'.`,
+                        funFact: "Quirky pick: 'La vie d'une courgette' at just 70 minutes - proof that animation can pack emotional punches in small packages!"
+                    },
+                    3: {
+                        title: "🎨 Season 3: Contemporary Focus",
+                        content: `25 movies with a modern twist! Average release year: 2003. You embraced recent masterpieces like 'Everything Everywhere All at Once' (2022).`,
+                        funFact: "International flair: From Swedish dark comedy 'Triangle of Sadness' to Argentina's 'Relatos Salvajes' - you went truly global!"
+                    },
+                    4: {
+                        title: "🎪 Season 4: The Variety Show",
+                        content: `36 movies with incredible diversity! 19 different countries represented. You balanced classics like 'Lawrence of Arabia' with modern hits like 'Poor Things'.`,
+                        funFact: "Epic extremes: From Quentin Dupieux's 77-minute 'Mandibule' to David Lean's 228-minute 'Lawrence of Arabia' - that's a 3x difference!"
+                    },
+                    5: {
+                        title: "🌟 Season 5: The Modern Era",
+                        content: `32 movies featuring 5 films from 2024! You're staying incredibly current while still appreciating classics like 'Ben-Hur' (1959).`,
+                        funFact: "2024 spotlight: 'Longlegs', 'Wild Robot', 'Furiosa', 'Here', and 'Emilia Perez' - you're practically running a film festival!"
+                    }
+                };
+
+                const seasonData = seasonInsights[seasonNum];
+                insights.push({
+                    title: seasonData.title,
+                    content: seasonData.content
+                });
+
+                insights.push({
+                    title: "🎯 Fun Fact",
+                    content: seasonData.funFact
+                });
+
+                const avgDuration = Math.round(seasonMinutes / seasonMovies.length);
+                const years = seasonMovies.map(m => m['Release Year']).filter(y => y > 1800);
+                const avgYear = Math.round(years.reduce((sum, year) => sum + year, 0) / years.length);
+
+                insights.push({
+                    title: "📈 Season Stats",
+                    content: `${seasonMovies.length} movies • ${seasonMinutes.toLocaleString()} minutes total • ${avgDuration} min average • ${avgYear} average release year`
+                });
+            }
+
+            if (currentFilters.presenter !== 'all') {
+                const presenterMovies = filteredData.filter(m => m['Presented by'] === currentFilters.presenter);
+                const presenterMinutes = presenterMovies.reduce((sum, m) => sum + m.Duration, 0);
+                const avgYear = Math.round(presenterMovies.reduce((sum, m) => sum + m['Release Year'], 0) / presenterMovies.length);
+                
+                insights.push({
+                    title: `🎭 ${currentFilters.presenter}'s Cinematic DNA`,
+                    content: `${presenterMovies.length} carefully curated films spanning ${presenterMinutes.toLocaleString()} minutes. Average release year: ${avgYear} - showing ${avgYear > 2010 ? 'contemporary' : avgYear > 1990 ? 'modern classic' : 'classic cinema'} taste.`
+                });
+            }
+
+            const insightsHTML = insights.map(insight => `
+                <div class="insight-card">
+                    <div class="insight-title">${insight.title}</div>
+                    <div>${insight.content}</div>
+                </div>
+            `).join('');
+
+            document.getElementById('insights-content').innerHTML = insightsHTML;
+        }
+
+        function updateTable() {
+            const filteredData = getFilteredData();
+            const tbody = document.getElementById('movies-tbody');
+            
+            tbody.innerHTML = filteredData.map(movie => `
+                <tr>
+                    <td><strong>${movie.Season}</strong></td>
+                    <td><strong>${movie.Title}</strong></td>
+                    <td>${movie['Presented by'] || '-'}</td>
+                    <td>${movie['Release Year'] || '-'}</td>
+                    <td>${movie.Duration}min</td>
+                    <td>${movie.Origin || '-'}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('filtered-count').textContent = `(${filteredData.length} movies)`;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                initializeDashboard();
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+                document.getElementById('loading').innerHTML = '<div style="color: red;">Error loading dashboard. Please refresh the page.</div>';
+            }
+        });
+    </script>
+</body>
+</html>
